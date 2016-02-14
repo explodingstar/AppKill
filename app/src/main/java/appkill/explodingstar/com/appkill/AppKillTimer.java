@@ -22,12 +22,11 @@ public class AppKillTimer extends AppCompatActivity {
     private TextView timerValue;
 
     private long startTime = 0L;
-
-    private Handler customHandler = new Handler();
-
     long timeInMilliseconds = 0L;
     long timeSwapBuff = 0L;
     long updatedTime = 0L;
+
+    private Handler customHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +42,7 @@ public class AppKillTimer extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, getString(R.string.insult), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -53,6 +52,7 @@ public class AppKillTimer extends AppCompatActivity {
         startButton = (Button) findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                resetTimerValues();
                 startTime = SystemClock.uptimeMillis();
                 customHandler.postDelayed(updateTimerThread, 0);
             }
@@ -63,6 +63,15 @@ public class AppKillTimer extends AppCompatActivity {
             public void onClick(View view) {
                 timeSwapBuff += timeInMilliseconds;
                 customHandler.removeCallbacks(updateTimerThread);
+            }
+        });
+
+        resetButton = (Button) findViewById(R.id.resetButton);
+        resetButton.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View view){
+                timerValue.setText(getString(R.string.timerVal));
+                customHandler.removeCallbacks(updateTimerThread);
+                resetTimerValues();
             }
         });
     }
@@ -83,6 +92,13 @@ public class AppKillTimer extends AppCompatActivity {
             customHandler.postDelayed(this, 0);
         }
     };
+
+    private void resetTimerValues(){
+        startTime = 0L;
+        timeInMilliseconds = 0L;
+        timeSwapBuff = 0L;
+        updatedTime = 0L;
+    }
 }
 
 
