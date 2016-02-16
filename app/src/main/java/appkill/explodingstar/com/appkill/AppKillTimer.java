@@ -1,37 +1,45 @@
 package appkill.explodingstar.com.appkill;
 
+import android.app.FragmentManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.format.Time;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Date;
+
 public class AppKillTimer extends AppCompatActivity {
+
+    private static final String COUNT_TIME = "CountdownTime";
 
     private Button startButton;
     private Button pauseButton;
     private Button resetButton;
+    private Button timePickerButton;
 
     private TextView timerValue;
-
-    private long startTime = 0L;
-    long timeInMilliseconds = 0L;
-    long timeSwapBuff = 0L;
-    long updatedTime = 0L;
-
-    private Handler customHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_kill_timer);
+
+        final CountDownTimerWithPause countdown = new CountDownTimerWithPause(10*1000, 1000, true) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                timerValue.setText("Seconds remaining: "+millisUntilFinished/1000);
+            }
+
+            @Override
+            public void onFinish() {
+                timerValue.setText(R.string.done);
+            }
+        };
 
         //toolbar stuff
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -48,56 +56,48 @@ public class AppKillTimer extends AppCompatActivity {
         });
 
         timerValue = (TextView) findViewById(R.id.timerValue);
+        timerValue.setText(R.string.input_wait);
+
+        timePickerButton = (Button) findViewById(R.id.timePicker);
+        timePickerButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                //set time button actions
+                FragmentManager manager = getFragmentManager();
+                TimePickerFragment dialog = new TimePickerFragment();;
+                dialog.show(manager, COUNT_TIME);
+
+            }
+        });
 
         startButton = (Button) findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                resetTimerValues();
-                startTime = SystemClock.uptimeMillis();
-                customHandler.postDelayed(updateTimerThread, 0);
+                //start button actions
+                startButton.setEnabled(false);
+                countdown.create();
             }
         });
 
         pauseButton = (Button) findViewById(R.id.pauseButton);
         pauseButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                timeSwapBuff += timeInMilliseconds;
-                customHandler.removeCallbacks(updateTimerThread);
+                //pause button actions
+                if (countdown.isPaused()) {
+                    countdown.resume();
+                } else {
+                    countdown.pause();
+                }
             }
         });
 
         resetButton = (Button) findViewById(R.id.resetButton);
-        resetButton.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View view){
-                timerValue.setText(getString(R.string.timerVal));
-                customHandler.removeCallbacks(updateTimerThread);
-                resetTimerValues();
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                //reset button actions
+                startButton.setEnabled(true);
+                countdown.cancel();
             }
         });
-    }
-
-    private Runnable updateTimerThread = new Runnable() {
-        public void run() {
-            timeInMilliseconds = SystemClock.uptimeMillis() - startTime;
-
-            updatedTime = timeSwapBuff + timeInMilliseconds;
-
-            int secs = (int) (updatedTime / 1000);
-            int mins = secs / 60;
-            secs = secs % 60;
-            int milliseconds = (int) (updatedTime % 1000);
-            timerValue.setText("" + mins + ":"
-                    + String.format("%02d", secs) + ":"
-                    + String.format("%03d", milliseconds));
-            customHandler.postDelayed(this, 0);
-        }
-    };
-
-    private void resetTimerValues(){
-        startTime = 0L;
-        timeInMilliseconds = 0L;
-        timeSwapBuff = 0L;
-        updatedTime = 0L;
     }
 }
 
